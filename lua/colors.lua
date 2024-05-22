@@ -3,7 +3,7 @@
 local hl_groups = {
     FlashcardsHeader = {fg = "#C0C0C0", bg = "#9933FF", default = true },
     FlashcardsMenuOption = {fg = "#FFFFFF", bg = "#000000", default = true },
-    FlashcardsMenuOptionVirtualText = {fg = "#000000", bg = "#FFFFFF", default = true },
+    FlashcardsMenuOptionVirtualText = {link = "Comment", default = true },
 }
 
 local hl_ns = vim.api.nvim_create_namespace("flashcards")

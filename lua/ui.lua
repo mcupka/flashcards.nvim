@@ -8,7 +8,7 @@ M._ui_header = {
     "------------------",
 }
 
-M._ui_main_menu= {
+M._ui_main_menu = {
     "Edit flashcards",
     "Review flashcards",
 }
@@ -22,11 +22,11 @@ local flashcards_ns = vim.api.nvim_create_namespace("flashcards")
 function M.display_main_menu(buffer, window)
     require("lua.colors")
 
-    vim.api.nvim_set_option_value("cursorline", true, {win=window})
+    vim.api.nvim_set_option_value("cursorline", true, { win = window })
     vim.keymap.set('n', '<CR>', function()
         local selected_option = vim.api.nvim_get_current_line()
         print("selected: " .. selected_option)
-    end , {silent = true, buffer = buffer})
+    end, { silent = true, buffer = buffer })
 
     if not vim.api.nvim_buf_is_valid(buffer) then
         print("buffer not valid")
@@ -40,9 +40,9 @@ function M.display_main_menu(buffer, window)
     vim.api.nvim_buf_set_lines(buffer, 0,
         0, true, M._ui_header)
     vim.api.nvim_buf_set_lines(buffer, _ui_header_end_row + 1,
-        _ui_header_end_row + 1, true, {""})
+        _ui_header_end_row + 1, true, { "" })
 
-    -- Adds header extmarks 
+    -- Adds header extmarks
     for i, line in ipairs(M._ui_header) do
         vim.api.nvim_buf_set_extmark(buffer, flashcards_ns, i - 1, 0, {
             end_col = string.len(M._ui_header[i]),
@@ -53,23 +53,34 @@ function M.display_main_menu(buffer, window)
 
     -- Adds menu option lines
     for i, option in ipairs(M._ui_main_menu) do
-       M.put_menu_option(buffer, option, i + _ui_menu_start_row - 1)
+        M.put_menu_option(buffer, option, i + _ui_menu_start_row - 1)
     end
-
-    vim.api.nvim_set_option_value('modifiable', false, {buf=buffer})
 end
 
-function M.put_menu_option(buffer, option, line)
-    vim.api.nvim_buf_set_lines(buffer, line, line, true, {option})
+--- take table for a card, and write it to _buffer_ at _line_ with proper
+--- formatting.
+--- @param buffer integer buffer to write to
+---@param line integer line to write buffer to
+---@param card string table for card i.e. {front = ..., back = ...}
+---@param side string side of card to show. ie front or back?
+function M.put_card_line(buffer, line, card, side)
+    vim.api.nvim_buf_set_lines(buffer, line, line, false, { card[side] })
     vim.api.nvim_buf_set_extmark(buffer, flashcards_ns, line, 0, {
-        end_col = string.len(option),
-        end_row = line,
-        hl_group = "FlashcardsMenuOption",
-        virt_text = {{"test vtext", "FlashcardsMenuOptionVirtualText"}},
+        virt_text = { { side == "front" and card["back"] or card["front"],
+            "FlashcardsMenuOptionVirtualText" } },
         virt_text_pos = "eol",
     })
 end
 
-
+function M.put_menu_option(buffer, option, line)
+    vim.api.nvim_buf_set_lines(buffer, line, line, true, { option })
+    vim.api.nvim_buf_set_extmark(buffer, flashcards_ns, line, 0, {
+        end_col = string.len(option),
+        end_row = line,
+        hl_group = "FlashcardsMenuOption",
+        virt_text = { { "test vtext", "FlashcardsMenuOptionVirtualText" } },
+        virt_text_pos = "eol",
+    })
+end
 
 return M

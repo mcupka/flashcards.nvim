@@ -1,0 +1,9 @@
+{
+    "name" : "Turkish Foods",
+    "cards" : [ 
+        {"front" : "bread", "back" : "ekmek"},
+        {"front" : "water", "back" : "su"},
+        {"front" : "milk", "back" : "süt"},
+        {"front" : "fish", "back" : "balık"}
+    ]
+}

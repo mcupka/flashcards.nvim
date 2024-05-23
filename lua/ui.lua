@@ -21,17 +21,16 @@ M.ui_menus[ui_states.main_menu] = {
     ["Edit flashcards"] = function()
         M._ui_state = ui_states.edit_flashcards
         M.refresh_ui(M._ui_buffer, M._ui_window)
-        vim.print("Calling edit flashcards function")
     end ,
     ["Review flashcards"] = function()
         M._ui_state = ui_states.review_flashcards
-        vim.print("Calling review flashcards function")
     end
 }
 
 M.ui_menus[ui_states.edit_flashcards] = {
     ["Go back"] = function()
         M._ui_state = ui_states.main_menu
+        M.refresh_ui(M._ui_buffer, M._ui_window)
     end
 }
 

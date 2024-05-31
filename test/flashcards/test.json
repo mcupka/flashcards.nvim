@@ -1,0 +1,11 @@
+{
+    "name" : "Test Set",
+    "cards" : [ 
+        {"front" : "word0", "back" : "back0"},
+        {"front" : "word1", "back" : "back1"}
+    ],
+    "tags" : [
+        "Turkish Learning",
+        "Another tag"
+    ]
+}

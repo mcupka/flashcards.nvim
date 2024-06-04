@@ -18,28 +18,78 @@ M._ui_header = {
 M.ui_menus = {}
 M.card_sets = require("lua.card_sets")
 
-function M.view_sets()
+function M.view_set(name)
     -- Clear menu
-    vim.api.nvim_set_option_value('modifiable', true, {buf=M._ui_buffer})
+    vim.api.nvim_set_option_value('modifiable', true, { buf = M._ui_buffer })
     vim.api.nvim_buf_set_lines(M._ui_buffer, M._ui_menu_start_row, -1, true, {})
-    vim.api.nvim_set_option_value('modifiable', false, {buf=M._ui_buffer})
 
     -- Put Go Back
     M.put_menu_option(M._ui_buffer, "Go back", M._ui_menu_start_row)
 
-    -- put line with set info
+    -- Put blank line
+    vim.api.nvim_set_option_value('modifiable', true, { buf = M._ui_buffer })
+    vim.api.nvim_buf_set_lines(M._ui_buffer, M._ui_menu_start_row + 1, M._ui_menu_start_row + 1, true, { "" })
+
+    -- put line with card info
     local i = 1
+    for _, card in ipairs(M.card_sets._sets[name]["cards"]) do
+        --vim.api.nvim_buf_set_lines(M._ui_buffer, M._ui_menu_start_row + 1 + i, M._ui_menu_start_row + 1 + i, true,
+         --   { card.front })
+        M.put_card_line(M._ui_buffer, M._ui_menu_start_row + 1 + i, card, "front")
+        i = i + 1
+    end
+    vim.api.nvim_set_option_value('modifiable', false, { buf = M._ui_buffer })
+
+    -- set keybinding
+    vim.keymap.set('n', '<CR>', function()
+        local selected_option = vim.api.nvim_get_current_line()
+        if selected_option == "Go back" then
+            M.ui_menus[M._ui_state]["Go back"]()
+        end
+    end, { silent = true, buffer = M._ui_buffer })
+
+end
+
+function M.view_sets()
+    -- Clear menu
+    vim.api.nvim_set_option_value('modifiable', true, { buf = M._ui_buffer })
+    vim.api.nvim_buf_set_lines(M._ui_buffer, M._ui_menu_start_row, -1, true, {})
+
+    -- Put Go Back
+    M.put_menu_option(M._ui_buffer, "Go back", M._ui_menu_start_row)
+
+    -- Put blank line
+    vim.api.nvim_set_option_value('modifiable', true, { buf = M._ui_buffer })
+    vim.api.nvim_buf_set_lines(M._ui_buffer, M._ui_menu_start_row + 1, M._ui_menu_start_row + 1, true, { "" })
+
+    -- put line with set info
+    local i = 2
     for name, set in pairs(M.card_sets._sets) do
         M.put_set_line(M._ui_buffer, M._ui_menu_start_row + i, name, set)
         i = i + 1
     end
+
+    -- Set key binding
+    vim.keymap.set('n', '<CR>', function()
+        local selected_option = vim.api.nvim_get_current_line()
+        if selected_option == "Go back" then
+            M.ui_menus[M._ui_state]["Go back"]()
+        end
+        for name, _ in pairs(M.card_sets._sets) do
+            if (selected_option == name) then
+                M.view_set(name)
+            end
+        end
+    end, { silent = true, buffer = M._ui_buffer })
+
+    vim.api.nvim_set_option_value('modifiable', false, { buf = M._ui_buffer })
 end
 
 M.ui_menus[ui_states.main_menu] = {
     ["Sets"] = function()
         M._ui_state = ui_states.view_sets
         M.view_sets()
-    end ,
+    end,
     ["Exit"] = function()
         vim.cmd.q()
     end
@@ -63,7 +113,7 @@ local _ui_header_end_row = 2
 local flashcards_ns = vim.api.nvim_create_namespace("flashcards")
 
 function M.refresh_ui(buffer, window)
-    vim.api.nvim_set_option_value('modifiable', true, {buf=buffer})
+    vim.api.nvim_set_option_value('modifiable', true, { buf = buffer })
 
     -- Clear everything after the header
     vim.api.nvim_buf_set_lines(buffer, M._ui_menu_start_row,
@@ -75,7 +125,15 @@ function M.refresh_ui(buffer, window)
         option_line = option_line + 1
     end
 
-    vim.api.nvim_set_option_value('modifiable', false, {buf=buffer})
+    vim.api.nvim_set_option_value('modifiable', false, { buf = buffer })
+
+    vim.keymap.set('n', '<CR>', function()
+        local selected_option = vim.api.nvim_get_current_line()
+        if M.ui_menus[M._ui_state][selected_option] ~= nil then
+            M.ui_menus[M._ui_state][selected_option]()
+        else
+        end
+    end, { silent = true, buffer = buffer })
 end
 
 function M.initialize_ui(buffer, window)
@@ -125,24 +183,24 @@ end
 --- formatting.
 --- @param buffer integer buffer to write to
 ---@param line integer line to write buffer to
----@param name string name of set 
+---@param name string name of set
 ---@param set table table of set contents
 function M.put_set_line(buffer, line, name, set)
-    vim.api.nvim_set_option_value('modifiable', true, {buf=buffer})
+    vim.api.nvim_set_option_value('modifiable', true, { buf = buffer })
     vim.api.nvim_buf_set_lines(buffer, line, line, false, { name })
     local vtext = ""
 
-    for _, card in ipairs({unpack(set.cards, 1, 3)}) do
+    for _, card in ipairs({ unpack(set.cards, 1, 3) }) do
         vtext = vtext .. card.front .. " "
     end
 
     if #set.cards > 3 then vtext = vtext .. "..." end
 
     vim.api.nvim_buf_set_extmark(buffer, flashcards_ns, line, 0, {
-        virt_text = { {vtext, "FlashcardsMenuOptionVirtualText"}},
+        virt_text = { { vtext, "FlashcardsMenuOptionVirtualText" } },
         virt_text_pos = "eol",
     })
-    vim.api.nvim_set_option_value('modifiable', false, {buf=buffer})
+    vim.api.nvim_set_option_value('modifiable', false, { buf = buffer })
 end
 
 --- take table for a card, and write it to _buffer_ at _line_ with proper
@@ -152,18 +210,18 @@ end
 ---@param card table table for card i.e. {front = ..., back = ...}
 ---@param side string side of card to show. ie front or back?
 function M.put_card_line(buffer, line, card, side)
-    vim.api.nvim_set_option_value('modifiable', true, {buf=buffer})
+    vim.api.nvim_set_option_value('modifiable', true, { buf = buffer })
     vim.api.nvim_buf_set_lines(buffer, line, line, false, { card[side] })
     vim.api.nvim_buf_set_extmark(buffer, flashcards_ns, line, 0, {
         virt_text = { { side == "front" and card["back"] or card["front"],
             "FlashcardsMenuOptionVirtualText" } },
         virt_text_pos = "eol",
     })
-    vim.api.nvim_set_option_value('modifiable', false, {buf=buffer})
+    vim.api.nvim_set_option_value('modifiable', false, { buf = buffer })
 end
 
 function M.put_menu_option(buffer, option, line)
-    vim.api.nvim_set_option_value('modifiable', true, {buf=buffer})
+    vim.api.nvim_set_option_value('modifiable', true, { buf = buffer })
     vim.api.nvim_buf_set_lines(buffer, line, line, true, { option })
     vim.api.nvim_buf_set_extmark(buffer, flashcards_ns, line, 0, {
         end_col = string.len(option),
@@ -172,8 +230,7 @@ function M.put_menu_option(buffer, option, line)
         virt_text = { { "test vtext", "FlashcardsMenuOptionVirtualText" } },
         virt_text_pos = "eol",
     })
-    vim.api.nvim_set_option_value('modifiable', false, {buf=buffer})
+    vim.api.nvim_set_option_value('modifiable', false, { buf = buffer })
 end
-
 
 return M
